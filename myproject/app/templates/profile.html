@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Registration</title>
+    <title>User Bio</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #f0f0f0;
             padding: 20px;
         }
         .container {
-            max-width: 400px;
+            max-width: 500px;
             margin: 0 auto;
             background-color: #fff;
             padding: 20px;
@@ -20,6 +20,7 @@
         }
         h2 {
             text-align: center;
+            margin-bottom: 20px;
         }
         form {
             display: flex;
@@ -27,15 +28,15 @@
         }
         label {
             margin-bottom: 5px;
+            font-weight: bold;
         }
-        input[type="text"],
-        input[type="email"],
-        input[type="password"] {
+        textarea {
             padding: 10px;
             margin-bottom: 15px;
             border: 1px solid #ccc;
             border-radius: 5px;
             font-size: 16px;
+            resize: vertical;
         }
         input[type="submit"] {
             background-color: #28a745;
@@ -53,29 +54,14 @@
 <body>
 
 <div class="container">
-    {% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-            <li class="{{ message.tags }}">{{ message }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    <h2>Register</h2>
-    <form action="{% url 'register' %}" method="POST">
+    <h2>User Bio</h2>
+    <form action="{% url 'profile' %}" method="POST">
         {% csrf_token %}
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" required>
+        
+        <label for="bio">Bio</label>
+        <textarea id="bio" name="bio" placeholder="Tell us something about yourself" rows="8" required></textarea>
 
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required>
-
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" required>
-
-        <label for="confirm_password">Confirm Password</label>
-        <input type="password" id="confirm_password" name="confirm_password" required>
-
-        <input type="submit" value="Register">
+        <input type="submit" value="Submit Bio">
     </form>
 </div>
 

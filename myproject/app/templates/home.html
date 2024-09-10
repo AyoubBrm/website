@@ -65,6 +65,13 @@
 </head>
 <body>
     <div class="container">
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
         <h1>Welcome</h1>
         <a href="{% url 'login' %}" class="button">Login</a>
         <a href="{% url 'register' %}" class="button">Register</a>

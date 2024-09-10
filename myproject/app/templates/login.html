@@ -78,6 +78,13 @@
 <body>
     <div class="login-container">
         <h2>Login</h2>
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
         <form method="post" action="{% url 'login' %}">
             {% csrf_token %}
             <div class="form-group">
