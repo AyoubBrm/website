@@ -63,6 +63,7 @@
     <h2>Register</h2>
     <form action="{% url 'register' %}" method="POST">
         {% csrf_token %}
+        
         <label for="username">Username</label>
         <input type="text" id="username" name="username" required>
 
