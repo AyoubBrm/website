@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waiting Users</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Waiting Users</h1>
+
+        <!-- Check if there are any waiting users -->
+        {% if waiting_user %}
+            <ul class="list-group">
+                <!-- Iterate through the waiting user list -->
+                {% for user in waiting_user %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ user.username }}
+                        <div>
+                            <form action="" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="button" onclick="accept('{{ user.username }}')" class="btn btn-success btn-sm">Accept</button>
+                            </form>
+                            <form action="" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="button" onclick="reject('{{ user.username }}')" class="btn btn-danger btn-sm">Reject</button>
+                            </form>
+                            <form action="" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="button" onclick="block('{{ user.username }}')" class="btn btn-danger btn-sm">Block</button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No users are currently waiting.</p>
+        {% endif %}
+    </div>
+    
+    <script>
+        async function accept(user) {
+            let formData = new FormData();
+            formData.append('user', user);
+            formData.append('case', 'accept')
+
+            console.log('Accept clicked!', user);
+            try {
+                const res = await fetch('http://127.0.0.1:8000/waiting/', {
+                    method: 'POST', // Specify the method
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}', // Include CSRF token
+                    },
+                });
+
+                if (!res.ok) {
+                    throw new Error('Error fetching user');
+                }
+                
+                const json = await res.json();
+                console.log(json);
+                // Optionally update the UI based on the response
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        async function reject(user) {
+            let formData = new FormData();
+            formData.append('user', user);
+            formData.append('case', 'reject')
+
+            console.log('Accept clicked!', user);
+            try {
+                const res = await fetch('http://127.0.0.1:8000/waiting/', {
+                    method: 'POST', // Specify the method
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}', // Include CSRF token
+                    },
+                });
+
+                if (!res.ok) {
+                    throw new Error('Error fetching user');
+                }
+                
+                const json = await res.json();
+                console.log(json);
+                // Optionally update the UI based on the response
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        async function block(user) {
+            let formData = new FormData();
+            formData.append('user', user);
+            formData.append('case', 'block')
+
+            console.log('Accept clicked!', user);
+            try {
+                const res = await fetch('http://127.0.0.1:8000/waiting/', {
+                    method: 'POST', // Specify the method
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}', // Include CSRF token
+                    },
+                });
+
+                if (!res.ok) {
+                    throw new Error('Error fetching user');
+                }
+                
+                const json = await res.json();
+                console.log(json);
+                // Optionally update the UI based on the response
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>

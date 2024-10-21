@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Room</title>
+</head>
+<body>
+    <h1>Welcome to the Chat Room</h1>
+
+    <!-- Display messages -->
+    <div id="messages"></div>
+
+    <!-- Input for user hashtag -->
+    <input id="userHashtag" type="text" placeholder="Enter user hashtag..." />
+    
+    <!-- Input for the message -->
+    <input id="messageInput" type="text" placeholder="Type a message..." />
+
+    <!-- Send button -->
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        // Connect to WebSocket
+        const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/');
+
+        chatSocket.onopen = function(e) {
+            console.log('WebSocket connection established!');
+        }
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            console.log(data);
+            // Display received message
+            document.getElementById('messages').innerHTML += '<p><strong>' + data.user + ':</strong> ' + data.message + '</p>';
+        };
+
+        chatSocket.onclose = function(e){
+            console.log('WebSocket connection closed!');
+        }
+
+        // Function to send the message
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const userHashtag = document.getElementById('userHashtag');
+            
+            if (userHashtag.value.trim() === "") {
+                alert("Please enter a user hashtag.");
+                return;
+            }
+
+            // Send message with user hashtag
+            chatSocket.send(JSON.stringify({
+                'message': messageInput.value,
+                'user': userHashtag.value
+            }));
+
+            // Clear input fields
+            messageInput.value = '';
+        }
+    </script>
+</body>
+</html>
