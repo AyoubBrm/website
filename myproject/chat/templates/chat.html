@@ -1,24 +1,26 @@
+
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Chat Room</title>
-</head>
-<body>
-    <h1>Welcome to the Chat Room</h1>
-
-    <!-- Display messages -->
-    <div id="messages"></div>
-
-    <!-- Input for user hashtag -->
-    <input id="userHashtag" type="text" placeholder="Enter user hashtag..." />
-    
-    <!-- Input for the message -->
-    <input id="messageInput" type="text" placeholder="Type a message..." />
-
-    <!-- Send button -->
-    <button onclick="sendMessage()">Send</button>
-
-    <script>
+    <head>
+        <title>Chat Room</title>
+    </head>
+    <body>
+        <h1>Welcome to the Chat Room</h1>
+        
+        <!-- Display messages -->
+        <div id="messages"></div>
+        
+        <!-- Input for user hashtag -->
+        <input id="userHashtag" type="text" placeholder="Enter user hashtag..." />
+        
+        <!-- Input for the message -->
+        <input id="messageInput" type="text" placeholder="Type a message..." />
+        
+        <!-- Send button -->
+        <button onclick="sendMessage()">Send</button>
+        
+        <script>
+        // import sanitizeHtml from 'sanitize-html';
         // Connect to WebSocket
         const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/');
 
@@ -28,9 +30,8 @@
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            console.log(data);
             // Display received message
-            document.getElementById('messages').innerHTML += '<p><strong>' + data.user + ':</strong> ' + data.message + '</p>';
+            document.getElementById('messages').textContent += data.user +  ' : '  + data.message ;
         };
 
         chatSocket.onclose = function(e){

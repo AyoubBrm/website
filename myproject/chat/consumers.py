@@ -3,6 +3,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
 from .models import Client
 from channels.layers import get_channel_layer
+from django.utils.html import strip_tags
 import redis
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -29,7 +30,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 channel_name=self.channel_name, status="online")
             for key in user:
                 message = key[0: key.find(":")]
-                print(message)
                 if self.scope["user"].username == message:
                     data = await sync_to_async (redis_client.hgetall)(key)
                     data = await sync_to_async (list)(data.items())
@@ -58,13 +58,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if client != None:
             if client.status == "offline":
                 resiver = text_data["user"]
-                next = await sync_to_async (redis_client.incr)('data_index')
-                await sync_to_async (redis_client.hset)(f'{resiver}:{next}' , mapping=text_data)
+                index = await sync_to_async (redis_client.incr)('index')
+                await sync_to_async (redis_client.hset)(f'{resiver}:{index}' , mapping=text_data)
             else:
                 await self.trough_channel(client.channel_name, text_data)
         
     async def send_message(self, event):
         await self.send(json.dumps({
-            'message': event["text"],
-            'user': event["user"],
+            'message': (event["text"]),
+            'user': (event["user"]),
         }))

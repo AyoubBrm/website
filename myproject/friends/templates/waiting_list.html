@@ -20,15 +20,19 @@
                         <div>
                             <form action="" method="post" style="display: inline;">
                                 {% csrf_token %}
-                                <button type="button" onclick="accept('{{ user.username }}')" class="btn btn-success btn-sm">Accept</button>
+                                <button type="button" onclick="accept('{{ user.id }}')" class="btn btn-success btn-sm">Accept</button>
                             </form>
                             <form action="" method="post" style="display: inline;">
                                 {% csrf_token %}
-                                <button type="button" onclick="reject('{{ user.username }}')" class="btn btn-danger btn-sm">Reject</button>
+                                <button type="button" onclick="reject('{{ user.id }}')" class="btn btn-danger btn-sm">Reject</button>
                             </form>
                             <form action="" method="post" style="display: inline;">
                                 {% csrf_token %}
-                                <button type="button" onclick="block('{{ user.username }}')" class="btn btn-danger btn-sm">Block</button>
+                                <button type="button" onclick="block('{{ user.id }}')" class="btn btn-danger btn-sm">Block</button>
+                            </form>
+                            <form action="" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="button" onclick="unblock('{{ user.id }}')" class="btn btn-warning btn-sm">Unblock</button>
                             </form>
                         </div>
                     </li>
@@ -40,18 +44,17 @@
     </div>
     
     <script>
-        async function accept(user) {
+        async function accept(user_id) {
             let formData = new FormData();
-            formData.append('user', user);
+            formData.append('user_id', user_id);
             formData.append('case', 'accept')
 
-            console.log('Accept clicked!', user);
             try {
                 const res = await fetch('http://127.0.0.1:8000/waiting/', {
-                    method: 'POST', // Specify the method
+                    method: 'POST',
                     body: formData,
                     headers: {
-                        'X-CSRFToken': '{{ csrf_token }}', // Include CSRF token
+                        'X-CSRFToken': '{{ csrf_token }}',
                     },
                 });
 
@@ -61,23 +64,22 @@
                 
                 const json = await res.json();
                 console.log(json);
-                // Optionally update the UI based on the response
             } catch (e) {
                 console.error(e);
             }
         }
-        async function reject(user) {
+
+        async function reject(user_id) {
             let formData = new FormData();
-            formData.append('user', user);
+            formData.append('user_id', user_id);
             formData.append('case', 'reject')
 
-            console.log('Accept clicked!', user);
             try {
                 const res = await fetch('http://127.0.0.1:8000/waiting/', {
-                    method: 'POST', // Specify the method
+                    method: 'POST',
                     body: formData,
                     headers: {
-                        'X-CSRFToken': '{{ csrf_token }}', // Include CSRF token
+                        'X-CSRFToken': '{{ csrf_token }}',
                     },
                 });
 
@@ -87,23 +89,22 @@
                 
                 const json = await res.json();
                 console.log(json);
-                // Optionally update the UI based on the response
             } catch (e) {
                 console.error(e);
             }
         }
-        async function block(user) {
+
+        async function block(user_id) {
             let formData = new FormData();
-            formData.append('user', user);
+            formData.append('user_id', user_id);
             formData.append('case', 'block')
 
-            console.log('Accept clicked!', user);
             try {
                 const res = await fetch('http://127.0.0.1:8000/waiting/', {
-                    method: 'POST', // Specify the method
+                    method: 'POST',
                     body: formData,
                     headers: {
-                        'X-CSRFToken': '{{ csrf_token }}', // Include CSRF token
+                        'X-CSRFToken': '{{ csrf_token }}',
                     },
                 });
 
@@ -113,7 +114,31 @@
                 
                 const json = await res.json();
                 console.log(json);
-                // Optionally update the UI based on the response
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function unblock(user_id) {
+            let formData = new FormData();
+            formData.append('user_id', user_id);
+            formData.append('case', 'unblock')
+
+            try {
+                const res = await fetch('http://127.0.0.1:8000/waiting/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                });
+
+                if (!res.ok) {
+                    throw new Error('Error fetching user');
+                }
+                
+                const json = await res.json();
+                console.log(json);
             } catch (e) {
                 console.error(e);
             }

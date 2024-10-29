@@ -67,11 +67,11 @@ def add_friend(request):
             friend_reciver : User = User.objects.get(username=_reciver)
             user_P : Profile = Profile.objects.get(user=_user)
             resiver_user_P : Profile = Profile.objects.get(user=friend_reciver)
-            if not user_P.block.filter(username=friend_reciver.username).exists():
-                if not resiver_user_P.block.filter(username=_user.username).exists():
-                    if not user_P.friends.filter(username=friend_reciver.username).exists():
-                        if not user_P.waiting.filter(username=friend_reciver.username).exists():
-                            if not resiver_user_P.waiting.filter(username=_user.username).exists():
+            if not user_P.block.filter(id=friend_reciver.id).exists():
+                if not resiver_user_P.block.filter(id=_user.id).exists():
+                    if not user_P.friends.filter(id=friend_reciver.id).exists():
+                        if not user_P.waiting.filter(id=friend_reciver.id).exists():
+                            if not resiver_user_P.waiting.filter(id=_user.id).exists():
                                 friend = friend_request.objects.create(sender=_user, reciver=friend_reciver)
                                 friend.save()
                             else:
@@ -94,21 +94,30 @@ def statusfriend_request(request):
     P_user : Profile = Profile.objects.get(user=user)
     list_user : Profile = P_user.waiting.all()
     if request.method == "POST":
-        s_username : str = request.POST.get('user')
-        s_user : User = User.objects.get(username=s_username)
+
+        s_user_id : str = request.POST.get('user_id')
+        s_user : User = User.objects.get(id=s_user_id)
         sender : friend_request = friend_request.objects.get(sender=s_user, reciver=user)
         if request.POST.get('case') == 'accept': # if user accept friend request ?
             sender.status = True
             sender.save()
         elif request.POST.get('case') == 'reject': # if user reject friend request ?
-            if P_user.waiting.filter(username=s_username).exists():
+            if P_user.waiting.filter(id=s_user_id).exists():
                 P_user.waiting.remove(s_user)
         else: # if user block friend request ?
-            if P_user.friends.filter(username=s_username).exists():
-               P_user.friends.remove(user)
-            elif P_user.waiting.filter(username=s_username).exists():
-                P_user.waiting.remove(s_user)
-            P_user.block.add(s_user)
+            block_user(user, P_user, s_user_id, s_user)
         sender.delete()
         P_user.save()
     return render(request, 'waiting_list.html', {'waiting_user' : list_user})
+
+def block_user(user : User, P_user : Profile, s_user_id : int,  s_user : User):
+    if P_user.friends.filter(id=s_user_id).exists():
+       P_user.friends.remove(user)
+    elif P_user.waiting.filter(id=s_user_id).exists():
+        P_user.waiting.remove(s_user)
+    P_user.block.add(s_user)
+
+def unblock_user(P_user : Profile ,s_user : User ,s_user_id : int):
+    if P_user.block.filter(id=s_user_id):
+        P_user.block.remove(s_user)
+    P_user.save()
