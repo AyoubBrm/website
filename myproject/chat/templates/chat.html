@@ -31,7 +31,7 @@
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
             // Display received message
-            document.getElementById('messages').textContent += data.user +  ' : '  + data.message ;
+            document.getElementById('messages').innerText += data.user +  ' : '  + data.message + '   ';
         };
 
         chatSocket.onclose = function(e){

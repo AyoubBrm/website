@@ -94,7 +94,6 @@ def statusfriend_request(request):
     P_user : Profile = Profile.objects.get(user=user)
     list_user : Profile = P_user.waiting.all()
     if request.method == "POST":
-
         s_user_id : str = request.POST.get('user_id')
         s_user : User = User.objects.get(id=s_user_id)
         sender : friend_request = friend_request.objects.get(sender=s_user, reciver=user)
