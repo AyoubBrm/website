@@ -47,9 +47,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return user
     
     @database_sync_to_async
-    def message_send(self, key):
-        message = key[0: key.find(":")] # see if the use have a backup message in redis server
-        if self.scope["user"].username == message:
+    def Parse_messgae_on_redis(self, key):
+        user : str = key[0: key.find(":")] # see if the use have a backup message in redis server and parsing it 
+        if self.scope["user"].username == user:
             data = (self.redis_client.hgetall)(key)
             data = (list)(data.items())
             data = [[item.decode('utf-8') for item in sublist] for sublist in data]
@@ -62,21 +62,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         user = await self.Creat_client()
         for key in user:
-            json_string = await self.message_send(key)
+            json_string = await self.Parse_messgae_on_redis(key)
             if (json_string != None):
                 await self.trough_channel(self.channel_name, json_string)
         await self.accept()
 
     async def receive(self, text_data):
-        text_data = await sync_to_async (json.loads)(text_data)
-        my_client = await sync_to_async(client.get)(username=text_data["user"])
-        status = await self.Backup_message_or_send(text_data, my_client)
+        text_data = await sync_to_async(json.loads)(text_data)
+        my_client : Client = await sync_to_async(client.get)(username=text_data["user"])
+        status : str = await self.Backup_message_or_send(text_data, my_client)
         if status == "send":
             await self.trough_channel(my_client.channel_name, text_data)
 
     @database_sync_to_async
     def disconnect(self, event):
-
         my_client = client.get(username=self.scope["user"].username)
         my_client.update_status("offline")
         my_client.save()
