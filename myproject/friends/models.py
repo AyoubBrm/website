@@ -6,9 +6,6 @@ class Profile(models.Model):
     friends = models.ManyToManyField(User, blank=True, related_name="friends")
     waiting = models.ManyToManyField(User, blank=True, related_name="waiting")
     block = models.ManyToManyField(User, blank=True, related_name="block")
-    image  = models.ImageField(upload_to='./upload', blank=True)
-    bio = models.TextField(max_length=100, blank=True)
-    score = models.IntegerField(default=0)
 
     def __str__(self):
         return f'{self.user.username} Profile'
