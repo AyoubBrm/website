@@ -7,6 +7,6 @@ urlpatterns = [
     path('login/', views.log_in, name='login'),
     path('profile/', views.creatprofile, name='profile'),
     path('methods/', views.Request_methods.as_view(), name='methods'),
-    path('waiting/', views.statusfriend_request, name='wait'),
-    # path('search/', views.Search.as_view(), name='hi'),
+    # path('waiting/', views.statusfriend_request, name='wait'),
+    path('search/', views.Search.as_view(), name='hi'),
 ]

@@ -7,7 +7,11 @@ from django.contrib import messages
 from .models import Profile, friend_request
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import Serializer_User
+from .serializers import Serializer_User, SerializerProfile
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from django.utils.decorators import method_decorator 
+from django.db.models import Q
 import json
 
 user = User.objects.all()
@@ -48,7 +52,7 @@ def log_in(request):
         if user is not None:
             messages.info(request, "Account login Successfully!")
             login(request ,user)
-            return redirect('friend')
+            return redirect('home')
         else:
             messages.error(request, "Invalid username or password")
             return redirect('add_friend')
@@ -64,14 +68,17 @@ def creatprofile(request):
             return redirect('login')
     return render(request, 'profile.html')
 
-# class Search(APIView):
-#     def post(self, request):
-#         _username = request.data.get("user")
-#         if (user.filter(username=_username).exists()):
-#             theuser = user.get(username=_username)
-#             serializer = Serializer_User(theuser)
-#             return Response(serializer.data)
-#         return Response(None)
+class Search(APIView):
+    @method_decorator(login_required)
+    def post(self, request):
+        _username_or_email = request.data.get("user_or_email")
+        if user.filter(Q (username__startswith=_username_or_email) | Q (email=_username_or_email)):
+            theuser = user.filter(Q (username__startswith=_username_or_email) | Q (email=_username_or_email))
+            serializer = Serializer_User(theuser, many=True)
+            return Response(serializer.data)
+        else:
+            return Response({"error" : " User not fond ."})
+
 def Unblock_user(P_user : Profile ,s_user : User ,s_user_id : int):
     if P_user.block.filter(id=s_user_id):
         P_user.block.remove(s_user)
@@ -80,20 +87,31 @@ def Accept_method(sender : friend_request):
     sender.status = True
     sender.save()
 
+
 def Reject_method(P_user : Profile, s_user_id : int, s_user : User):
     if P_user.waiting.filter(id=s_user_id).exists():
-                P_user.waiting.remove(s_user)
+        P_user.waiting.remove(s_user)
 
-def Block_user(user : User, P_user : Profile, s_user_id : int,  s_user : User):
+def Block_user(user ,P_user : Profile, s_user_id : int,  s_user : User):
+    user_P : Profile = profile.get(id=s_user_id)
+    if user_P.friends.filter(id=user.id).exists():
+      user_P.friends.remove(user)
     if P_user.friends.filter(id=s_user_id).exists():
-       P_user.friends.remove(user)
+       P_user.friends.remove(s_user)
     elif P_user.waiting.filter(id=s_user_id).exists():
         P_user.waiting.remove(s_user)
     P_user.block.add(s_user)
 
-def  ADD_method(_user, _reciver):
-    if user.filter(username=_reciver).exists():
-        friend_reciver : User = user.get(username=_reciver)
+def Unfriend(P_user : Profile , s_user_id : int, s_user : User, _user : User):
+    user_P : Profile = profile.get(id=s_user_id)
+    if P_user.friends.filter(id=s_user_id).exists():
+        P_user.friends.remove(s_user)
+    if user_P.friends.filter(id=_user.id).exists():
+        user_P.friends.remove(_user)
+
+def  ADD_method(_user, _reciver_id):
+    if user.filter(id=_reciver_id).exists():
+        friend_reciver : User = user.get(id=_reciver_id)
         user_P : Profile = profile.get(user=_user)
         resiver_user_P : Profile = profile.get(user=friend_reciver)
         if not user_P.block.filter(id=friend_reciver.id).exists():
@@ -104,61 +122,47 @@ def  ADD_method(_user, _reciver):
                             friend = friend_request.objects.create(sender=_user, reciver=friend_reciver)
                             friend.save()
                         else:
-                            return Response({"message" : " You have allredy sent request wait for response. "})
+                            return Response({"error" : " You have allredy sent request wait for response. "})
                     else:
-                        return Response({"message" : " This User Alrady Invite You And Waiting Your Confirm. "})
+                        return Response({"error" : " This User Alrady Invite You And Waiting Your Confirm. "})
                 else:
-                    return Response({"message" : " Already Have This User As Friend. "})
+                    return Response({"error" : " Already Have This User As Friend. "})
             else:
-                return Response({"message" : " You Get Blocked From This User. "})
+                return Response({"error" : " You Get Blocked From This User. "})
         else:
-            return Response({"message" : " You Can't add This User. "})
+            return Response({"error" : " You Can't add This User. "})
     else:
-        return Response({"message" : " Invalid username. "})
-    return Response({"message" : " request send . "})
-    
+        return Response({"error" : " Invalid username. "})
+    return Response({"error" : " request send . "})
+
 class Request_methods(APIView):
+    @method_decorator(login_required)
     def post(self, request):
         status = request.data.get("status")
         _user : User =  request.user
-        _reciver : str = request.data.get('user')
+        _reciver : str = request.data.get('user_id')
         P_user : Profile = profile.get(user=_user)
+        Serializer = SerializerProfile(P_user)
         if status == "ADD":
             return ADD_method(_user, _reciver)
-        elif status == "REJECT" or status == "BLOCK" or status == "ACCEPT" or status == "UNBLOCK":
+        elif status == "REJECT" or status == "BLOCK" or status == "ACCEPT" \
+                or status == "UNBLOCK" or status == "UNFRIEND":
             s_user_id : str = request.data.get('user_id')
             s_user : User = user.get(id=s_user_id)
-            sender : friend_request = request_friend.get(sender=s_user, reciver=_user)
-            if status == "REJECT":
-                return Reject_method(P_user, s_user_id, s_user)
-            elif status == "ACCEPT":
-                return Accept_method(sender)
+            sender = None
+            if request_friend.filter(sender=s_user, reciver=_user).exists():
+                sender : friend_request = request_friend.get(sender=s_user, reciver=_user)
+            if status == "ACCEPT":
+                Accept_method(sender)
+            elif status == "REJECT":
+                Reject_method(P_user, s_user_id, s_user)
             elif status == "BLOCK":
-                return Block_user(user, P_user, s_user_id, s_user)
+                Block_user(_user, P_user, s_user_id, s_user)
             elif status == "UNBLOCK":
-                return Unblock_user(P_user, s_user, s_user_id)
-            sender.delete()
+                Unblock_user(P_user, s_user, s_user_id)
+            elif status == "UNFRIEND":
+                Unfriend(P_user, s_user_id, s_user, _user)
+            if sender != None:
+                sender.delete()
         P_user.save()
-        return Response(None)
-    
-@login_required
-def statusfriend_request(request):
-    _user = request.user
-    P_user : Profile = Profile.objects.get(user=_user)
-    list_user : Profile = P_user.waiting.all()
-    if request.method == "POST":
-        s_user_id : str = request.POST.get('user_id')
-        s_user : User = user.get(id=s_user_id)
-        sender : friend_request = friend_request.objects.get(sender=s_user, reciver=_user)
-        if request.POST.get('case') == 'accept': # if user accept friend request ?
-            sender.status = True
-            sender.save()
-        elif request.POST.get('case') == 'reject': # if user reject friend request ?
-            if P_user.waiting.filter(id=s_user_id).exists():
-                P_user.waiting.remove(s_user)
-        else: # if user block friend request ?
-            Block_user(user, P_user, s_user_id, s_user)
-        sender.delete()
-        P_user.save()
-    return render(request, 'waiting_list.html', {'waiting_user' : list_user})
-
+        return Response({"UserProfile" :  Serializer.data})
